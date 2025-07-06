@@ -3,25 +3,33 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
-import { loadNotes } from '../store/notesSlice';
+import { fetchNotes } from '../store/notesSlice';
 
 export function NotesList({
   residentId,
   onEdit,
 }: {
-  residentId: string;
-  onEdit: (noteId: string) => void;
+  residentId: number;
+  onEdit: (noteId: number) => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
-  const notes = useSelector((s: RootState) => s.notes.list);
+  const {
+    list: notes,
+    loading,
+    error,
+  } = useSelector((state: RootState) => state.notes);
 
   useEffect(() => {
-    if (residentId) dispatch(loadNotes(residentId));
+    if (residentId) {
+      dispatch(fetchNotes(residentId));
+    }
   }, [residentId, dispatch]);
 
   return (
     <div className='p-4'>
       <h2 className='text-2xl font-bold mb-4'>Notes</h2>
+      {loading && <p className='text-gray-500'>Loading notes…</p>}
+      {error && <p className='text-red-500'>Error: {error}</p>}
       <ul className='space-y-4'>
         {notes.map((note) => (
           <li key={note.id} className='p-4 bg-white rounded shadow'>

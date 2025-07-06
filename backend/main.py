@@ -67,3 +67,17 @@ def create_note(note: Note):
         session.commit()
         session.refresh(note)
         return note
+
+@app.put("/notes/{note_id}", response_model=Note)
+def update_note(note_id: int, note: Note):
+    with Session(engine) as session:
+        db_note = session.get(Note, note_id)
+        if not db_note:
+            raise HTTPException(status_code=404, detail="Note not found")
+        db_note.content = note.content
+        db_note.summary = note.summary
+        db_note.tags = note.tags
+        session.add(db_note)
+        session.commit()
+        session.refresh(db_note)
+        return db_note
