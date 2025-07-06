@@ -1,11 +1,20 @@
 from fastapi import FastAPI
-from sqlmodel import SQLModel, Field, create_engine, Session
+from fastapi.middleware.cors import CORSMiddleware
+from sqlmodel import SQLModel, Field, create_engine, Session, select
 from typing import Optional, List
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 sqlite_file = "database.db"
 engine = create_engine(f"sqlite:///{sqlite_file}", echo=True)
 
@@ -35,4 +44,26 @@ def read_root():
 @app.get("/residents", response_model=List[Resident])
 def list_residents():
     with Session(engine) as session:
-        return session.exec(Resident.select()).all()
+        return session.exec(select(Resident)).all()
+
+@app.post("/residents", response_model=Resident)
+def create_resident(resident: Resident):
+    with Session(engine) as session:
+        session.add(resident)
+        session.commit()
+        session.refresh(resident)
+        return resident
+
+@app.get("/notes/{resident_id}", response_model=List[Note])
+def get_notes(resident_id: int):
+    with Session(engine) as session:
+        statement = select(Note).where(Note.resident_id == resident_id)
+        return session.exec(statement).all()
+
+@app.post("/notes", response_model=Note)
+def create_note(note: Note):
+    with Session(engine) as session:
+        session.add(note)
+        session.commit()
+        session.refresh(note)
+        return note
