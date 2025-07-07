@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export type Resident = {
   id: number;
   first_name: string;
@@ -16,9 +18,7 @@ const initialState: ResidentsState = { list: [], loading: false, error: null };
 
 // load residents
 export const fetchResidents = createAsyncThunk('residents/fetch', async () => {
-  const response = await axios.get<Resident[]>(
-    'http://127.0.0.1:8000/residents'
-  );
+  const response = await axios.get<Resident[]>(`${BASE_URL}/residents`);
   return response.data;
 });
 
@@ -27,7 +27,7 @@ export const addResidentApi = createAsyncThunk(
   'residents/add',
   async (newRes: Omit<Resident, 'id'>) => {
     const response = await axios.post<Resident>(
-      'http://127.0.0.1:8000/residents',
+      `${BASE_URL}/residents`,
       newRes
     );
     return response.data;
@@ -37,7 +37,7 @@ export const addResidentApi = createAsyncThunk(
 export const deleteResidentApi = createAsyncThunk(
   'residents/delete',
   async (id: number) => {
-    await axios.delete(`http://127.0.0.1:8000/residents/${id}`);
+    await axios.delete(`${BASE_URL}/residents/${id}`);
     return id;
   }
 );
@@ -47,7 +47,7 @@ export const updateResidentApi = createAsyncThunk(
   'residents/update',
   async (res: Resident) => {
     const { data } = await axios.put<Resident>(
-      `http://127.0.0.1:8000/residents/${res.id}`,
+      `${BASE_URL}/residents/${res.id}`,
       res
     );
     return data;
@@ -86,10 +86,13 @@ export const residentsSlice = createSlice({
           state.list = state.list.filter((r) => r.id !== action.payload);
         }
       )
-      .addCase(updateResidentApi.fulfilled, (state, action: PayloadAction<Resident>) => {
-        const idx = state.list.findIndex(r => r.id === action.payload.id);
-        if (idx !== -1) state.list[idx] = action.payload;
-      })
+      .addCase(
+        updateResidentApi.fulfilled,
+        (state, action: PayloadAction<Resident>) => {
+          const idx = state.list.findIndex((r) => r.id === action.payload.id);
+          if (idx !== -1) state.list[idx] = action.payload;
+        }
+      );
   },
 });
 

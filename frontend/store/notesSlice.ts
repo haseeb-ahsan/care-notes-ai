@@ -2,6 +2,8 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export type Note = {
   id: number;
   resident_id: number;
@@ -28,9 +30,7 @@ const initialState: NotesState = {
 export const fetchNotes = createAsyncThunk(
   'notes/fetch',
   async (residentId: number) => {
-    const response = await axios.get<Note[]>(
-      `http://127.0.0.1:8000/notes/${residentId}`
-    );
+    const response = await axios.get<Note[]>(`${BASE_URL}/notes/${residentId}`);
     return response.data;
   }
 );
@@ -39,10 +39,7 @@ export const fetchNotes = createAsyncThunk(
 export const addNoteApi = createAsyncThunk(
   'notes/add',
   async (note: Omit<Note, 'id' | 'created_at'>) => {
-    const response = await axios.post<Note>(
-      'http://127.0.0.1:8000/notes',
-      note
-    );
+    const response = await axios.post<Note>(`${BASE_URL}/notes`, note);
     return response.data;
   }
 );
@@ -52,7 +49,7 @@ export const updateNoteApi = createAsyncThunk(
   'notes/update',
   async (note: Note) => {
     const response = await axios.put<Note>(
-      `http://127.0.0.1:8000/notes/${note.id}`,
+      `${BASE_URL}/notes/${note.id}`,
       note
     );
     return response.data;
@@ -62,7 +59,7 @@ export const updateNoteApi = createAsyncThunk(
 export const deleteNoteApi = createAsyncThunk(
   'notes/delete',
   async (id: number) => {
-    await axios.delete(`http://127.0.0.1:8000/notes/${id}`);
+    await axios.delete(`${BASE_URL}/notes/${id}`);
     return id;
   }
 );
