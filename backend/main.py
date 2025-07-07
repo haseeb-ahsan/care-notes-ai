@@ -5,8 +5,11 @@ from typing import Optional, List
 from sqlalchemy import Column
 from sqlalchemy.types import JSON
 from ai_utils import summarize_and_tag
+from datetime import datetime 
 
 app = FastAPI()
+
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -19,36 +22,39 @@ app.add_middleware(
 database_file = "database.db"
 engine = create_engine(f"sqlite:///{database_file}", echo=True)
 
-# models
+
 class Resident(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     first_name: str
     last_name: str
     room: str
 
-# Note (no id) used for creation
+# Base fields shared across create/update/response
 class NoteBase(SQLModel):
     resident_id: int
     content: str
     summary: Optional[str] = None
     tags: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    created_at: datetime = Field(default_factory=datetime.utcnow)  
+    author: Optional[str] = None  
 
-# inherits from NoteBase, no id field
+# POST note payload
 class NoteCreate(NoteBase):
     pass
 
-# FNote model with id in DB
+# Full DB Note model
 class Note(NoteBase, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
 
 @app.on_event("startup")
 def on_startup():
-    # Create tables
     SQLModel.metadata.create_all(engine)
+
 
 @app.get("/")
 def read_root():
     return {"message": "Care Notes API is alive!"}
+
 
 @app.get("/residents", response_model=List[Resident])
 def list_residents():
@@ -83,12 +89,14 @@ def delete_resident(resident_id: int):
         resident = session.get(Resident, resident_id)
         if not resident:
             raise HTTPException(status_code=404, detail="Resident not found")
+        # delete notes for resident
         notes = session.exec(select(Note).where(Note.resident_id == resident_id)).all()
         for n in notes:
             session.delete(n)
         session.delete(resident)
         session.commit()
     return {"ok": True}
+
 
 @app.get("/notes/{resident_id}", response_model=List[Note])
 def get_notes(resident_id: int):
@@ -99,16 +107,18 @@ def get_notes(resident_id: int):
 
 @app.post("/notes", response_model=Note)
 async def create_note(note_in: NoteCreate):
-    # summarize & tag via AI
+    # AI summary/tags
     ai = await summarize_and_tag(note_in.content)
-    # build Note object for DB
+
     note = Note(
         resident_id=note_in.resident_id,
         content=note_in.content,
         summary=ai["summary"],
         tags=ai["tags"],
+        author=note_in.author, 
+        created_at=note_in.created_at  # will default to now if not set
     )
-    # 3. Save to DB
+
     with Session(engine) as session:
         session.add(note)
         session.commit()
@@ -121,9 +131,11 @@ def update_note(note_id: int, note: Note):
         db_note = session.get(Note, note_id)
         if not db_note:
             raise HTTPException(status_code=404, detail="Note not found")
+
         db_note.content = note.content
         db_note.summary = note.summary
         db_note.tags = note.tags
+        db_note.author = note.author  
         session.add(db_note)
         session.commit()
         session.refresh(db_note)

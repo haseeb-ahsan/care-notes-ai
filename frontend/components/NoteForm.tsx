@@ -20,6 +20,7 @@ export function NoteForm({ residentId, existingNote, onSaved }: NoteFormProps) {
   const dispatch = useDispatch<AppDispatch>();
   const [content, setContent] = useState(existingNote?.content || '');
   const [saving, setSaving] = useState(false);
+  const [author, setAuthor] = useState('Nurse A');
 
   // content in sync if editing a different note
   useEffect(() => {
@@ -42,7 +43,9 @@ export function NoteForm({ residentId, existingNote, onSaved }: NoteFormProps) {
         })
       ).unwrap();
     } else {
-      await dispatch(addNoteApi({ resident_id: residentId, content })).unwrap();
+      await dispatch(
+        addNoteApi({ resident_id: residentId, content, author })
+      ).unwrap();
     }
 
     // refresh and close

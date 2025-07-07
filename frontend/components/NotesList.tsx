@@ -44,6 +44,10 @@ export function NotesList({
               </p>
               {/* Original content */}
               <p className='mt-2'>{note.content}</p>
+              <p className='text-sm text-gray-400'>
+                {note.author ? `By ${note.author}` : 'Unknown'} |{' '}
+                {new Date(note.created_at).toLocaleString()}
+              </p>
             </div>
             <div className='flex flex-col items-end space-y-2'>
               <button onClick={() => onEdit(note.id)}>

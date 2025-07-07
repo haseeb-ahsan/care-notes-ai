@@ -8,6 +8,8 @@ export type Note = {
   content: string;
   summary?: string;
   tags?: string[];
+  created_at?: string;
+  author?: string;
 };
 
 interface NotesState {
@@ -36,7 +38,7 @@ export const fetchNotes = createAsyncThunk(
 // Thunk to add a note via API
 export const addNoteApi = createAsyncThunk(
   'notes/add',
-  async (note: Omit<Note, 'id'>) => {
+  async (note: Omit<Note, 'id' | 'created_at'>) => {
     const response = await axios.post<Note>(
       'http://127.0.0.1:8000/notes',
       note
