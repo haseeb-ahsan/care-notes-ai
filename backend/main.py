@@ -12,7 +12,7 @@ app = FastAPI()
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://care-notes-nccov5zj5-haseeb-ahsans-projects.vercel.app, https://care-notes-ai.vercel.app"],
+    allow_origins=["http://localhost:3000", "https://care-notes-nccov5zj5-haseeb-ahsans-projects.vercel.app", "https://care-notes-ai.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
