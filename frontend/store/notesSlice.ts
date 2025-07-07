@@ -56,6 +56,14 @@ export const updateNoteApi = createAsyncThunk(
     return response.data;
   }
 );
+// delete note
+export const deleteNoteApi = createAsyncThunk(
+  'notes/delete',
+  async (id: number) => {
+    await axios.delete(`http://127.0.0.1:8000/notes/${id}`);
+    return id;
+  }
+);
 
 export const notesSlice = createSlice({
   name: 'notes',
@@ -82,6 +90,12 @@ export const notesSlice = createSlice({
         (state, action: PayloadAction<Note>) => {
           const idx = state.list.findIndex((n) => n.id === action.payload.id);
           if (idx !== -1) state.list[idx] = action.payload;
+        }
+      )
+      .addCase(
+        deleteNoteApi.fulfilled,
+        (state, action: PayloadAction<number>) => {
+          state.list = state.list.filter((n) => n.id !== action.payload);
         }
       );
   },

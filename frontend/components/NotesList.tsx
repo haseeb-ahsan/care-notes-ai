@@ -3,7 +3,8 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '../store';
-import { fetchNotes } from '../store/notesSlice';
+import { fetchNotes, deleteNoteApi } from '../store/notesSlice';
+import { Trash2, Edit2 } from 'lucide-react';
 
 export function NotesList({
   residentId,
@@ -20,9 +21,7 @@ export function NotesList({
   } = useSelector((state: RootState) => state.notes);
 
   useEffect(() => {
-    if (residentId) {
-      dispatch(fetchNotes(residentId));
-    }
+    if (residentId) dispatch(fetchNotes(residentId));
   }, [residentId, dispatch]);
 
   return (
@@ -32,27 +31,28 @@ export function NotesList({
       {error && <p className='text-red-500'>Error: {error}</p>}
       <ul className='space-y-4'>
         {notes.map((note) => (
-          <li key={note.id} className='p-4 bg-white rounded shadow'>
-            <p className='italic text-gray-600'>
-              {note.summary || 'No summary yet'}
-            </p>
-            <p className='mt-2'>{note.content}</p>
-            <div className='mt-2 space-x-2'>
-              {note.tags?.map((tag) => (
-                <span
-                  key={tag}
-                  className='px-2 py-1 bg-blue-100 rounded-full text-sm'
-                >
-                  {tag}
-                </span>
-              ))}
+          <li
+            key={note.id}
+            className='flex justify-between items-start p-4 bg-white rounded shadow'
+          >
+            <div>
+              {/* AI Summary */}
+              <p className='font-semibold'>Summary: {note.summary}</p>
+              {/* AI Tags */}
+              <p className='italic text-gray-600'>
+                Tags: {note.tags?.join(', ')}
+              </p>
+              {/* Original content */}
+              <p className='mt-2'>{note.content}</p>
             </div>
-            <button
-              className='mt-2 text-blue-600 hover:underline'
-              onClick={() => onEdit(note.id)}
-            >
-              Edit
-            </button>
+            <div className='flex flex-col items-end space-y-2'>
+              <button onClick={() => onEdit(note.id)}>
+                <Edit2 size={16} />
+              </button>
+              <button onClick={() => dispatch(deleteNoteApi(note.id))}>
+                <Trash2 size={16} />
+              </button>
+            </div>
           </li>
         ))}
       </ul>

@@ -33,6 +33,26 @@ export const addResidentApi = createAsyncThunk(
     return response.data;
   }
 );
+// delete
+export const deleteResidentApi = createAsyncThunk(
+  'residents/delete',
+  async (id: number) => {
+    await axios.delete(`http://127.0.0.1:8000/residents/${id}`);
+    return id;
+  }
+);
+
+// update
+export const updateResidentApi = createAsyncThunk(
+  'residents/update',
+  async (res: Resident) => {
+    const { data } = await axios.put<Resident>(
+      `http://127.0.0.1:8000/residents/${res.id}`,
+      res
+    );
+    return data;
+  }
+);
 
 export const residentsSlice = createSlice({
   name: 'residents',
@@ -59,7 +79,17 @@ export const residentsSlice = createSlice({
         (state, action: PayloadAction<Resident>) => {
           state.list.push(action.payload);
         }
-      );
+      )
+      .addCase(
+        deleteResidentApi.fulfilled,
+        (state, action: PayloadAction<number>) => {
+          state.list = state.list.filter((r) => r.id !== action.payload);
+        }
+      )
+      .addCase(updateResidentApi.fulfilled, (state, action: PayloadAction<Resident>) => {
+        const idx = state.list.findIndex(r => r.id === action.payload.id);
+        if (idx !== -1) state.list[idx] = action.payload;
+      })
   },
 });
 
